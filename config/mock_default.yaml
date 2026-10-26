@@ -1,0 +1,139 @@
+# REME synthetic market world — mock data contract v1.0
+
+seed: 999
+current_date: 2026-01-01        # date adjustable
+n_zones: 8                      # zones are named ZONE_1 ... ZONE_<n>
+zone_prefix: ZONE_
+quarter_years: [2024, 2025]     # date_price labels ("YYYY-QN") are drawn in this span
+
+geo:
+  presale_bbox:    {lat: [20.6451, 20.6751], lon: [-103.3788, -103.3488]}
+  brokerage_bbox:  {lat: [20.6451, 20.6751], lon: [-103.3788, -103.3488]}
+  standalone_bbox: {lat: [20.51517, 20.63517], lon: [-103.2788, -103.2488]}
+  metro_stations:                # simulated points of interest
+    - {lat: 20.6482, lon: -103.3728}
+    - {lat: 20.6523, lon: -103.3648}
+    - {lat: 20.6618, lon: -103.3531}
+    - {lat: 20.6701, lon: -103.3499}
+  commercial_centres:
+    - {lat: 20.6472, lon: -103.3698}
+    - {lat: 20.6547, lon: -103.3601}
+    - {lat: 20.6637, lon: -103.3544}
+
+presale_devs:                    # §1 presale developments
+  n: 100
+  dev_type_probs: {3: 0.25, 4: 0.45, 5: 0.15, 6: 0.20}   # weights, normalised at draw time
+  total_units: [20, 200]
+  amenities_score: [1, 10]
+  vertical_dev_types: [4, 5]     # only these get more than one floor
+  vertical_floors: [5, 25]
+  price_sqm_mean: 55000.0
+  price_sqm_sd: 12000.0
+  sale_start_from: 2024-01-01    # launch dates: distinct days in [this, current_date]
+  sold_share: [0.1, 0.9]
+
+presale_units:                   # §2 presale units (prices linked to the parent)
+  units_per_dev: [20, 80]
+  surfaces:
+    lot:       {built_sqm: [80.0, 500.0], accessory_sqm: [0.0, 0.0]}
+    house:     {built_sqm: [80.0, 250.0], accessory_sqm: [0.0, 80.0]}
+    apartment: {built_sqm: [40.0, 220.0], accessory_sqm: [0.0, 30.0]}
+  rooms: [1, 4]
+  baths: [1, 3]
+  parking: [0, 2]
+  house_floors: [1, 2]           # clamped to the parent's floors (§2.2)
+  sold_prob: 0.6
+  dom_min_days: 10               # days_on_market in [min(10, dev age), dev age]
+
+brokerage_devs:                  # §3 delivered developments
+  n: 60
+  dev_type_probs: {3: 0.20, 4: 0.50, 5: 0.10, 6: 0.20}
+  total_units: [20, 200]
+  amenities_score: [1, 10]
+  floors: [5, 25]
+  price_sqm_mean: 52000.0
+  price_sqm_sd: 10000.0
+  delivery_lookback_days: 1825   # est_delivery: distinct days in [current - N, current]
+
+brokerage_in_dev:                # §4 resale units inside delivered developments
+  n: 180
+  surfaces:
+    lot:       {built_sqm: [80.0, 500.0], accessory_sqm: [0.0, 0.0]}
+    house:     {built_sqm: [80.0, 250.0], accessory_sqm: [0.0, 80.0]}
+    apartment: {built_sqm: [45.0, 220.0], accessory_sqm: [0.0, 30.0]}
+  rooms: [1, 4]
+  baths: [1, 3]
+  parking: [0, 2]
+  house_floors: [1, 2]
+  sold_prob: 0.7
+  days_on_market: [10, 730]
+  unit_id_number_range: [100000, 900000]   # BROK_DEV_<number>, drawn without replacement
+
+brokerage_standalone:            # §5 standalone resale units
+  n: 120
+  id_type_probs: {1: 0.4, 2: 0.6}          # 1 = lot, 2 = house
+  built_sqm: [60.0, 500.0]
+  accessory_sqm: [0.0, 200.0]
+  rooms: [1, 6]
+  baths: [1, 4]
+  parking: [0, 4]
+  sold_prob: 0.55
+  days_on_market: [10, 730]
+  price: [2000000.0, 20000000.0]
+
+targets:                         # §10 one subject property per routing path
+  dev:                           # path 1 — presale development
+    dev_id: NEW_PROJECT_ALPHA
+    dev_type: 4
+    price_sqm_avg: 58000.0
+    lat: 20.65517
+    lon: -103.3588
+    zone_id: ZONE_3
+    amenities_score: 8
+    total_units: 50
+    floors: 18
+    sale_start_date: 2024-06-01
+    sold_units: 15
+    date_price: 2024-Q3
+  unit_in_dev:                   # path 2 — unit inside path-1 dev (parent fields inherited)
+    unit_id: ALPHA_U001
+    id_type: 4
+    rooms: 2
+    baths: 2
+    parking: 1
+    built_sqm: 98.0
+    accessory_sqm: 12.0
+    balcony_terrace: 1
+    floor: 9
+    sold: 0
+  brokerage_in_dev:              # path 3 — resale unit inside a delivered dev
+    unit_id: BROK_DEV_TARGET_001
+    parent_dev_id: BDEV_5
+    id_type: 4
+    rooms: 2
+    baths: 1
+    parking: 1
+    built_sqm: 85.0
+    accessory_sqm: 6.0
+    balcony_terrace: 1
+    floor: 4
+    sold: 0
+    days_on_market: 45
+    zone_id: ZONE_2
+    date_price: 2025-Q1
+  standalone:                    # path 4 — standalone resale unit (price to estimate)
+    unit_id: BROK_SOLO_TARGET_001
+    id_type: 2
+    rooms: 3
+    baths: 2
+    parking: 2
+    built_sqm: 180.0
+    accessory_sqm: 60.0
+    balcony_terrace: 1
+    floor: 1
+    sold: 0
+    days_on_market: 45
+    date_price: 2025-Q1
+    zone_id: ZONE_5
+    lat: 20.6566
+    lon: -103.36
